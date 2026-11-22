@@ -7,6 +7,7 @@ import matplotlib.pyplot as plt
 import os
 import time
 import base64
+from PIL import Image
 
 # ─── Configuration & Model Path ───
 TARGET_SR = 16000
@@ -17,9 +18,17 @@ MODEL_PATH = os.path.join('models', 'rf_model.pkl')
 LOGO_PATH = os.path.join('assets', 'logo_small.png')
 FULL_LOGO_PATH = os.path.join('assets', 'logo.png')
 
+# Load page icon
+page_icon = "🛡️"
+if os.path.exists(FULL_LOGO_PATH):
+    try:
+        page_icon = Image.open(FULL_LOGO_PATH)
+    except Exception:
+        page_icon = "🛡️"
+
 st.set_page_config(
     page_title="Voice Guard | Forensic Audio Deepfake Detector",
-    page_icon=FULL_LOGO_PATH if os.path.exists(FULL_LOGO_PATH) else "🛡️",
+    page_icon=page_icon,
     layout="wide",
     initial_sidebar_state="collapsed"
 )
@@ -73,7 +82,7 @@ footer {visibility: hidden; height: 0 !important;}
 .stDeployButton {display: none !important;}
 
 .block-container {
-    padding: 1.2rem 2.5rem 2rem !important;
+    padding: 1.2rem 2.5rem 1.8rem !important;
     max-width: 1400px !important;
 }
 
@@ -93,9 +102,10 @@ footer {visibility: hidden; height: 0 !important;}
 .nav-brand {
     display: flex;
     align-items: center;
-    gap: 14px;
+    gap: 12px;
 }
 
+/* Pure clean borderless logo */
 .brand-logo-img {
     width: 36px;
     height: 36px;
@@ -105,6 +115,8 @@ footer {visibility: hidden; height: 0 !important;}
     box-shadow: none !important;
     outline: none !important;
     border-radius: 0 !important;
+    padding: 0 !important;
+    margin: 0 !important;
     display: block;
 }
 
@@ -112,13 +124,9 @@ footer {visibility: hidden; height: 0 !important;}
     display: inline-flex;
     align-items: center;
     justify-content: center;
-    width: 40px;
-    height: 40px;
-    border-radius: 10px;
-    background: linear-gradient(135deg, #2563EB 0%, #38BDF8 100%);
-    color: #FFFFFF;
+    width: 36px;
+    height: 36px;
     font-size: 20px;
-    box-shadow: 0 0 16px rgba(56, 189, 248, 0.4);
 }
 
 .brand-text h1 {
@@ -607,14 +615,14 @@ audio {
     gap: 10px;
 }
 
-/* ── Footer ── */
+/* ── Compact Footer ── */
 .app-footer {
     text-align: center;
-    padding: 20px 0 10px;
-    font-size: 11.5px;
+    padding: 12px 0 6px;
+    font-size: 11px;
     color: var(--text-muted);
     border-top: 1px solid var(--border-color);
-    margin-top: 28px;
+    margin-top: 16px;
 }
 
 .app-footer a {
@@ -1015,7 +1023,7 @@ with right_col:
                         </div>
                         """, unsafe_allow_html=True)
 
-# ── Footer ──
+# ── Compact Footer ──
 st.markdown("""
 <div class="app-footer">
     Voice Guard Analysis Tool · Forensic ML Audio Verification · 
