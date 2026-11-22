@@ -4,3 +4,7 @@ numpy<2.0.0
 scikit-learn
 matplotlib
 joblib
+Pillow
+soundfile
+gTTS
+edge-tts
