@@ -6,6 +6,7 @@ import joblib
 import matplotlib.pyplot as plt
 import os
 import time
+import base64
 
 # ─── Configuration & Model Path ───
 TARGET_SR = 16000
@@ -13,13 +14,24 @@ TARGET_DURATION = 5.0  # seconds
 TARGET_SAMPLES = int(TARGET_SR * TARGET_DURATION)
 N_MFCC = 40
 MODEL_PATH = os.path.join('models', 'rf_model.pkl')
+LOGO_PATH = os.path.join('assets', 'logo_small.png')
+FULL_LOGO_PATH = os.path.join('assets', 'logo.png')
 
 st.set_page_config(
     page_title="Voice Guard | Forensic Audio Deepfake Detector",
-    page_icon="🛡️",
+    page_icon=FULL_LOGO_PATH if os.path.exists(FULL_LOGO_PATH) else "🛡️",
     layout="wide",
     initial_sidebar_state="collapsed"
 )
+
+# ─── Load Logo as Base64 ───
+def get_base64_image(image_path):
+    if os.path.exists(image_path):
+        with open(image_path, "rb") as f:
+            return base64.b64encode(f.read()).decode()
+    return None
+
+logo_b64 = get_base64_image(LOGO_PATH) or get_base64_image(FULL_LOGO_PATH)
 
 # ─── Professional Dark Navy / Charcoal Theme ───
 st.markdown("""
@@ -82,6 +94,15 @@ footer {visibility: hidden; height: 0 !important;}
     display: flex;
     align-items: center;
     gap: 14px;
+}
+
+.brand-logo-img {
+    width: 44px;
+    height: 44px;
+    border-radius: 12px;
+    object-fit: contain;
+    box-shadow: 0 0 16px rgba(56, 189, 248, 0.35);
+    background: transparent;
 }
 
 .brand-shield {
@@ -197,21 +218,30 @@ footer {visibility: hidden; height: 0 !important;}
 
 /* ── Upload Box Customization ── */
 [data-testid="stFileUploader"] {
-    background: #0E1524 !important;
-    border: 1px dashed rgba(56, 189, 248, 0.3) !important;
+    background: rgba(14, 21, 36, 0.6) !important;
+    border: 1.5px dashed rgba(56, 189, 248, 0.3) !important;
     border-radius: 14px !important;
-    padding: 24px 20px !important;
+    padding: 20px !important;
     transition: all 0.2s ease-in-out !important;
 }
 
 [data-testid="stFileUploader"]:hover {
     border-color: #38BDF8 !important;
-    background: #111A2E !important;
+    background: rgba(17, 26, 46, 0.8) !important;
     box-shadow: 0 0 16px rgba(56, 189, 248, 0.15) !important;
 }
 
 [data-testid="stFileUploader"] section {
     padding: 0 !important;
+    background: transparent !important;
+    border: none !important;
+}
+
+/* Hide default file uploader list/box artifacts completely */
+[data-testid="stFileUploaderFile"],
+[data-testid="stFileUploaderFileData"],
+[data-testid="stFileUploader"] ul {
+    display: none !important;
 }
 
 [data-testid="stFileUploader"] button {
@@ -237,7 +267,7 @@ footer {visibility: hidden; height: 0 !important;}
     border: 1px solid rgba(56, 189, 248, 0.2);
     border-radius: 12px;
     padding: 14px 18px;
-    margin: 14px 0 18px 0;
+    margin: 4px 0 14px 0;
 }
 
 .file-meta-header {
@@ -588,10 +618,12 @@ def load_classifier():
 
 
 # ─── Navigation Header ───
-st.markdown("""
+logo_element = f'<img src="data:image/png;base64,{logo_b64}" class="brand-logo-img" alt="Voice Guard Logo" />' if logo_b64 else '<div class="brand-shield">🛡️</div>'
+
+st.markdown(f"""
 <div class="top-nav">
     <div class="nav-brand">
-        <div class="brand-shield">🛡️</div>
+        {logo_element}
         <div class="brand-text">
             <h1>VOICE GUARD <span style="font-size:13px; font-weight:400; color:#38BDF8; margin-left:6px;">FORENSIC AUDIO SUITE</span></h1>
             <p>Acoustic feature analysis &amp; Random Forest synthetic voice detection</p>
@@ -666,13 +698,20 @@ with left_col:
             """, unsafe_allow_html=True)
 
         else:
+            # Hide the default Streamlit uploader file bar once file is loaded
+            st.markdown("""
+            <style>
+            [data-testid="stFileUploader"] {
+                display: none !important;
+            }
+            </style>
+            """, unsafe_allow_html=True)
+
             # ── Dynamic Audio Metadata Extraction ──
             try:
                 uploaded_file.seek(0)
-                # Load native sample rate and duration without resampling first
                 y_raw, native_sr = librosa.load(uploaded_file, sr=None)
                 native_duration = librosa.get_duration(y=y_raw, sr=native_sr)
-                num_channels = 1 if len(y_raw.shape) == 1 else y_raw.shape[0]
 
                 # Render File Metadata Card
                 st.markdown(f"""
@@ -708,12 +747,12 @@ with left_col:
 
                 st.markdown("<div style='height: 12px;'></div>", unsafe_allow_html=True)
 
-                # Action Button Row (Analyze + Clear)
-                btn_col1, btn_col2 = st.columns([2.5, 1])
+                # Action Button Row (Analyze + Remove / Replace)
+                btn_col1, btn_col2 = st.columns([2.2, 1.2])
                 with btn_col1:
                     run_analysis = st.button("⚡ Run Deepfake Analysis", type="primary", use_container_width=True)
                 with btn_col2:
-                    if st.button("✕ Clear", use_container_width=True):
+                    if st.button("✕ Remove", use_container_width=True):
                         st.session_state["uploader_key"] += 1
                         st.session_state["has_analyzed"] = False
                         st.session_state["current_file_name"] = None
@@ -812,10 +851,10 @@ with right_col:
                         elif len(y_norm) < TARGET_SAMPLES:
                             padding = TARGET_SAMPLES - len(y_norm)
                             y_processed = np.pad(y_norm, (0, padding), 'constant')
-                            window_note = f"Padded with {padding} zero-samples"
+                            window_note = f"Padded +{padding} samples"
                         else:
                             y_processed = y_norm
-                            window_note = "Exact 5.0s fit"
+                            window_note = "Exact 5.0s window"
 
                         # 3. MFCC Feature Extraction (40 coefficients)
                         mfcc = librosa.feature.mfcc(y=y_processed, sr=TARGET_SR, n_mfcc=N_MFCC)
@@ -827,6 +866,7 @@ with right_col:
                         probabilities = model.predict_proba(X_input)[0]
                         confidence = float(probabilities[prediction] * 100.0)
                         process_time = time.time() - start_time
+                        latency_ms = process_time * 1000.0
 
                         # ── Outcome Verdict Banner ──
                         if prediction == 0:
@@ -899,7 +939,7 @@ with right_col:
                         st.pyplot(fig)
 
                         # ── Technical Diagnostics Tiles ──
-                        st.markdown("""
+                        st.markdown(f"""
                         <div class="metrics-grid">
                             <div class="metric-tile">
                                 <div class="metric-label">Target Sample Rate</div>
@@ -928,15 +968,11 @@ with right_col:
                             </div>
                             <div class="metric-tile">
                                 <div class="metric-label">Inference Latency</div>
-                                <div class="metric-val">{process_time * 1000:.1f} ms</div>
+                                <div class="metric-val">{latency_ms:.1f} ms</div>
                                 <div class="metric-sub">CPU feature + inference</div>
                             </div>
                         </div>
-                        """.format(
-                            window_note=window_note,
-                            native_duration=native_duration,
-                            process_time=process_time
-                        ), unsafe_allow_html=True)
+                        """, unsafe_allow_html=True)
 
                     except Exception as e:
                         st.markdown(f"""
