@@ -97,12 +97,15 @@ footer {visibility: hidden; height: 0 !important;}
 }
 
 .brand-logo-img {
-    width: 42px;
-    height: 42px;
-    border-radius: 10px;
+    width: 36px;
+    height: 36px;
     object-fit: contain;
-    box-shadow: 0 0 16px rgba(56, 189, 248, 0.35);
-    background: transparent;
+    background: transparent !important;
+    border: none !important;
+    box-shadow: none !important;
+    outline: none !important;
+    border-radius: 0 !important;
+    display: block;
 }
 
 .brand-shield {
