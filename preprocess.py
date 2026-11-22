@@ -14,7 +14,7 @@ TARGET_SAMPLES = int(TARGET_SR * TARGET_DURATION)
 REAL_FOLDER = 'real_samples'
 FAKE_FOLDERS = [
     'FlashSpeech', 'NaturalSpeech3', 'OpenAI', 'PromptTTS2', 
-    'VALLE', 'VoiceBox', 'seedtts_files', 'xTTS'
+    'VALLE', 'VoiceBox', 'seedtts_files', 'xTTS', 'fake_indian_tts'
 ]
 
 def preprocess_audio(file_path, output_path):
